@@ -1,0 +1,4 @@
+interface:
+  display_name: "YouTube Transcript"
+  short_description: "Fetch faithful YouTube transcripts"
+  default_prompt: "Use $youtube-transcript to fetch the original transcript for a YouTube video URL or ID in merged Markdown blocks."
