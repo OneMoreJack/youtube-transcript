@@ -1,6 +1,6 @@
 ---
 name: youtube-transcript
-description: Use when you need the original YouTube transcript for a video URL or ID, with faithful timestamped output and no summarization, translation, or ASR fallback.
+description: Use when you need the original YouTube transcript for a video URL or ID, with faithful timestamped output and no summarization, translation, or ASR fallback. Also use when the user explicitly asks to save that transcript into Notion as a page with the video title, channel, source URL, and transcript body.
 ---
 
 # YouTube Transcript
@@ -17,6 +17,7 @@ Use this skill when the user wants:
 - timestamps in merged paragraph blocks instead of one subtitle line per snippet
 - transcript text that matches YouTube's transcript content
 - the video's original transcript language by default
+- the transcript saved into Notion, but only when they explicitly ask for that destination
 
 Do not use this skill when the user wants:
 
@@ -31,7 +32,9 @@ Do not use this skill when the user wants:
 3. Check whether the transcript needs a language choice before output.
 4. If the user already expressed a preference by meaning, honor it even if they did not use the exact mode names.
 5. If the user did not express a preference and the transcript is mixed bilingual, ask before returning the transcript.
-6. Run the final fetch command with the chosen language mode and return the script output directly unless the user asked for a file or alternate format.
+6. Default behavior is to return the transcript directly in the conversation. Do not save to Notion unless the user explicitly asked to save it there.
+7. If the user explicitly wants the transcript stored in Notion, run `python3 scripts/save_youtube_transcript_to_notion.py "<url-or-id>"` from the skill root. This script uses the local config at `.youtube-transcript-notion.json` in the skill root.
+8. If the user explicitly wants Notion saving but the config is missing, tell them to copy `setup_notion_config.example.json` to `.youtube-transcript-notion.json` and fill it in locally. Do not ask them to paste their Notion token into chat.
 
 Useful flags:
 
@@ -72,11 +75,15 @@ Next block...
 - Preserve other speaker labeling only when it already exists in the transcript text.
 - If no YouTube transcript exists, fail clearly instead of generating one.
 - If a requested language is unavailable, fail clearly instead of translating.
+- Return transcript output in chat by default.
+- Save to Notion only on explicit user request.
 
 ## Notes
 
 - The bundled script uses `youtube_transcript_api`.
 - Use `--format inspect` before the final output command whenever you have not yet determined whether a bilingual choice is required.
+- For first-time Notion setup, copy `setup_notion_config.example.json` to `.youtube-transcript-notion.json` and fill it in locally so the Notion token never needs to appear in the chat transcript.
+- The default config file lives at `.youtube-transcript-notion.json` in the skill root and should stay local to each installed copy of the skill.
 - When no `>>` markers exist and punctuation is present, blocks use sentence-ending boundaries near 30 seconds.
 - When neither punctuation nor `>>` markers exist, blocks split by time windows near 30 seconds.
 - The merge step only changes block boundaries and line breaks. It does not paraphrase transcript content.

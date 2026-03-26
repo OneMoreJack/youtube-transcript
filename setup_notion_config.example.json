@@ -1,0 +1,9 @@
+{
+  "notion_token": "your_notion_integration_token",
+  "database_id": "your_notion_database_id",
+  "title_property": "Name",
+  "channel_property": "Channel",
+  "link_property": "Source URL",
+  "status_property": "Status",
+  "default_status": "Not Started"
+}
