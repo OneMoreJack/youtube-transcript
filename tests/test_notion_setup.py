@@ -92,6 +92,98 @@ class SaveToNotionTests(unittest.TestCase):
         self.assertIn("setup_notion_config.example.json", message)
         self.assertIn(".youtube-transcript-notion.json", message)
 
+    def test_ensure_database_properties_creates_missing_channel_and_link(self):
+        module = load_script("save_youtube_transcript_to_notion", "save_youtube_transcript_to_notion.py")
+        self.assertIsNotNone(module)
+
+        calls = []
+
+        def fake_notion_request(method, path, token, payload=None):
+            calls.append((method, path, token, payload))
+            self.assertEqual(method, "PATCH")
+            self.assertEqual(path, "/databases/database-123")
+            self.assertEqual(token, "secret-token")
+            return {
+                "properties": {
+                    "Name": {"type": "title"},
+                    "Channel": {"type": "rich_text"},
+                    "Source URL": {"type": "url"},
+                }
+            }
+
+        original_request = module.notion_request
+        try:
+            module.notion_request = fake_notion_request
+            schema_props = module.ensure_database_properties(
+                "database-123",
+                "secret-token",
+                {
+                    "title_property": "Name",
+                    "channel_property": "Channel",
+                    "link_property": "Source URL",
+                },
+                {
+                    "Name": {"type": "title"},
+                },
+            )
+        finally:
+            module.notion_request = original_request
+
+        self.assertEqual(
+            calls[0][3],
+            {
+                "properties": {
+                    "Channel": {"rich_text": {}},
+                    "Source URL": {"url": {}},
+                }
+            },
+        )
+        self.assertEqual(schema_props["Channel"]["type"], "rich_text")
+        self.assertEqual(schema_props["Source URL"]["type"], "url")
+
+    def test_ensure_database_properties_rejects_missing_title_property(self):
+        module = load_script("save_youtube_transcript_to_notion", "save_youtube_transcript_to_notion.py")
+        self.assertIsNotNone(module)
+
+        with self.assertRaises(module.NotionSaveError) as ctx:
+            module.ensure_database_properties(
+                "database-123",
+                "secret-token",
+                {
+                    "title_property": "Name",
+                    "channel_property": "Channel",
+                    "link_property": "Source URL",
+                },
+                {},
+            )
+
+        self.assertIn("title_property", str(ctx.exception))
+
+    def test_ensure_database_properties_rejects_missing_status_property(self):
+        module = load_script("save_youtube_transcript_to_notion", "save_youtube_transcript_to_notion.py")
+        self.assertIsNotNone(module)
+
+        with self.assertRaises(module.NotionSaveError) as ctx:
+            module.ensure_database_properties(
+                "database-123",
+                "secret-token",
+                {
+                    "title_property": "Name",
+                    "channel_property": "Channel",
+                    "link_property": "Source URL",
+                    "status_property": "Status",
+                    "default_status": "Inbox",
+                },
+                {
+                    "Name": {"type": "title"},
+                    "Channel": {"type": "rich_text"},
+                    "Source URL": {"type": "url"},
+                },
+            )
+
+        self.assertIn("Status", str(ctx.exception))
+        self.assertIn("manually", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

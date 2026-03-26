@@ -34,7 +34,8 @@ Do not use this skill when the user wants:
 5. If the user did not express a preference and the transcript is mixed bilingual, ask before returning the transcript.
 6. Default behavior is to return the transcript directly in the conversation. Do not save to Notion unless the user explicitly asked to save it there.
 7. If the user explicitly wants the transcript stored in Notion, run `python3 scripts/save_youtube_transcript_to_notion.py "<url-or-id>"` from the skill root. This script uses the local config at `.youtube-transcript-notion.json` in the skill root.
-8. If the user explicitly wants Notion saving but the config is missing, tell them to copy `setup_notion_config.example.json` to `.youtube-transcript-notion.json` and fill it in locally. Do not ask them to paste their Notion token into chat.
+8. If the configured Notion database is missing the configured channel or source URL property, the script can create those automatically. Do not assume it can create a missing title property or status property.
+9. If the user explicitly wants Notion saving but the config is missing, tell them to copy `setup_notion_config.example.json` to `.youtube-transcript-notion.json` and fill it in locally. Do not ask them to paste their Notion token into chat.
 
 Useful flags:
 

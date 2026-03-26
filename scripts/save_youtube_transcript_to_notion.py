@@ -211,17 +211,54 @@ def build_property_value(prop_name: str, prop_type: str, value: str | None) -> d
     raise NotionSaveError(f"Property '{prop_name}' has unsupported type '{prop_type}'.")
 
 
+def ensure_database_properties(database_id: str, token: str, config: dict, schema_props: dict) -> dict:
+    title_name = config["title_property"]
+    if title_name not in schema_props:
+        raise NotionSaveError(
+            f"Database is missing title_property '{title_name}'. Create a title property in Notion and update the config."
+        )
+
+    missing_props = {}
+
+    channel_name = config["channel_property"]
+    if channel_name not in schema_props:
+        missing_props[channel_name] = {"rich_text": {}}
+
+    link_name = config["link_property"]
+    if link_name not in schema_props:
+        missing_props[link_name] = {"url": {}}
+
+    status_property = config.get("status_property")
+    default_status = config.get("default_status")
+    if status_property and default_status and status_property not in schema_props:
+        raise NotionSaveError(
+            f"Database is missing status property '{status_property}'. Create it manually in Notion, then try again."
+        )
+
+    if not missing_props:
+        return schema_props
+
+    updated = notion_request(
+        "PATCH",
+        f"/databases/{database_id}",
+        token,
+        {"properties": missing_props},
+    )
+    return updated.get("properties", {})
+
+
 def create_page(config: dict, metadata: dict, token: str) -> dict:
     schema = fetch_database_schema(config["database_id"], token)
-    schema_props = schema.get("properties", {})
+    schema_props = ensure_database_properties(
+        config["database_id"],
+        token,
+        config,
+        schema.get("properties", {}),
+    )
 
     title_name = config["title_property"]
     channel_name = config["channel_property"]
     link_name = config["link_property"]
-
-    for required_name in (title_name, channel_name, link_name):
-        if required_name not in schema_props:
-            raise NotionSaveError(f"Database is missing property '{required_name}'.")
 
     props = {
         title_name: build_property_value(title_name, schema_props[title_name]["type"], metadata["title"]),

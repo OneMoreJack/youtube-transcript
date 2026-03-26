@@ -72,6 +72,8 @@ Then open `.youtube-transcript-notion.json` and fill in:
 
 This is safer than pasting secrets into chat. The token stays in your local terminal and is written to `.youtube-transcript-notion.json` in the skill root.
 
+If the target database is missing the configured channel or source URL property, the script will create those properties automatically. If the title property is missing, or if you want to use a status property, create those manually in Notion first.
+
 ## Examples
 
 ```text
@@ -105,6 +107,8 @@ Use youtube-transcript to fetch the transcript for https://www.youtube.com/watch
 - renders bilingual lines on adjacent lines with no blank line between them
 - saves to Notion through `scripts/save_youtube_transcript_to_notion.py` using `.youtube-transcript-notion.json` in the skill root
 - prompts you to copy `setup_notion_config.example.json` first if the Notion config does not exist yet
+- automatically creates missing channel and source URL properties in the target Notion database
+- still expects the configured title property and any configured status property to already exist
 
 ## Local Development
 
